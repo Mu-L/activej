@@ -25,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 
+import static io.activej.common.exception.Utils.propagateRuntimeException;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
@@ -89,9 +90,8 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	public <U> Promise<U> map(@NotNull BiFunctionEx<? super T, Exception, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(null, exception));
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			propagateRuntimeException(ex);
 			return Promise.ofException(ex);
 		}
 	}
@@ -100,9 +100,8 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	public @NotNull <U> Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<@NotNull Exception, ? extends U> exceptionFn) {
 		try {
 			return Promise.of(exceptionFn.apply(exception));
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			propagateRuntimeException(ex);
 			return Promise.ofException(ex);
 		}
 	}
@@ -122,9 +121,8 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	public <U> Promise<U> then(@NotNull BiFunctionEx<? super T, Exception, ? extends Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(null, exception);
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			propagateRuntimeException(ex);
 			return Promise.ofException(ex);
 		}
 	}
@@ -134,9 +132,8 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		try {
 			action.accept(null, exception);
 			return this;
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			propagateRuntimeException(ex);
 			return Promise.ofException(ex);
 		}
 	}
@@ -146,9 +143,8 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		try {
 			action.run();
 			return this;
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			propagateRuntimeException(ex);
 			return Promise.ofException(ex);
 		}
 	}
@@ -168,9 +164,8 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		try {
 			action.accept(exception);
 			return this;
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			propagateRuntimeException(ex);
 			return Promise.ofException(ex);
 		}
 	}
@@ -180,9 +175,8 @@ public final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		try {
 			action.run();
 			return this;
-		} catch (RuntimeException ex) {
-			throw ex;
 		} catch (Exception ex) {
+			propagateRuntimeException(ex);
 			return Promise.ofException(ex);
 		}
 	}

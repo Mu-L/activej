@@ -109,9 +109,10 @@ public final class BlockingEventloopExecutor implements EventloopExecutor {
 		post(() -> {
 			try {
 				computation.run();
-			} catch (RuntimeException ex) {
-				throw ex;
 			} catch (Exception ex) {
+				if (ex instanceof RuntimeException) {
+					eventloop.recordFatalError(ex, computation);
+				}
 				future.completeExceptionally(ex);
 				return;
 			} finally {
@@ -135,9 +136,10 @@ public final class BlockingEventloopExecutor implements EventloopExecutor {
 						future.completeExceptionally(e);
 					}
 				});
-			} catch (RuntimeException ex) {
-				throw ex;
 			} catch (Exception ex) {
+				if (ex instanceof RuntimeException) {
+					eventloop.recordFatalError(ex, computation);
+				}
 				future.completeExceptionally(ex);
 			} finally {
 				complete();
