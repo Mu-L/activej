@@ -32,7 +32,6 @@ import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.exception.Utils.propagateRuntimeException;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
@@ -185,7 +184,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			try {
 				return isResult() ? Promise.of(fn.apply(result)) : (Promise<U>) this;
 			} catch (Exception ex) {
-				propagateRuntimeException(ex);
+				if (ex instanceof RuntimeException) {
+					getCurrentEventloop().recordFatalError(ex, this);
+				}
 				return Promise.ofException(ex);
 			}
 		}
@@ -197,7 +198,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					try {
 						newResult = fn.apply(result);
 					} catch (Exception ex) {
-						propagateRuntimeException(ex);
+						if (ex instanceof RuntimeException) {
+							getCurrentEventloop().recordFatalError(ex, this);
+						}
 						completeExceptionally(ex);
 						return;
 					}
@@ -223,7 +226,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			try {
 				return Promise.of(fn.apply(result, exception));
 			} catch (Exception ex) {
-				propagateRuntimeException(ex);
+				if (ex instanceof RuntimeException) {
+					getCurrentEventloop().recordFatalError(ex, this);
+				}
 				return Promise.ofException(ex);
 			}
 		}
@@ -234,7 +239,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				try {
 					newResult = fn.apply(result, e);
 				} catch (Exception ex) {
-					propagateRuntimeException(ex);
+					if (ex instanceof RuntimeException) {
+						getCurrentEventloop().recordFatalError(ex, this);
+					}
 					completeExceptionally(ex);
 					return;
 				}
@@ -256,7 +263,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			try {
 				return Promise.of(exception == null ? fn.apply(result) : exceptionFn.apply(exception));
 			} catch (Exception ex) {
-				propagateRuntimeException(ex);
+				if (ex instanceof RuntimeException) {
+					getCurrentEventloop().recordFatalError(ex, this);
+				}
 				return Promise.ofException(ex);
 			}
 		}
@@ -267,7 +276,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				try {
 					newResult = e == null ? fn.apply(result) : exceptionFn.apply(e);
 				} catch (Exception ex) {
-					propagateRuntimeException(ex);
+					if (ex instanceof RuntimeException) {
+						getCurrentEventloop().recordFatalError(ex, this);
+					}
 					completeExceptionally(ex);
 					return;
 				}
@@ -289,7 +300,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			try {
 				return isResult() ? (Promise<U>) fn.get() : (Promise<U>) this;
 			} catch (Exception ex) {
-				propagateRuntimeException(ex);
+				if (ex instanceof RuntimeException) {
+					getCurrentEventloop().recordFatalError(ex, this);
+				}
 				return Promise.ofException(ex);
 			}
 		}
@@ -301,7 +314,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					try {
 						promise = fn.get();
 					} catch (Exception ex) {
-						propagateRuntimeException(ex);
+						if (ex instanceof RuntimeException) {
+							getCurrentEventloop().recordFatalError(ex, this);
+						}
 						completeExceptionally(ex);
 						return;
 					}
@@ -327,7 +342,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			try {
 				return isResult() ? (Promise<U>) fn.apply(result) : (Promise<U>) this;
 			} catch (Exception ex) {
-				propagateRuntimeException(ex);
+				if (ex instanceof RuntimeException) {
+					getCurrentEventloop().recordFatalError(ex, this);
+				}
 				return Promise.ofException(ex);
 			}
 		}
@@ -339,7 +356,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					try {
 						promise = fn.apply(result);
 					} catch (Exception ex) {
-						propagateRuntimeException(ex);
+						if (ex instanceof RuntimeException) {
+							getCurrentEventloop().recordFatalError(ex, this);
+						}
 						completeExceptionally(ex);
 						return;
 					}
@@ -365,7 +384,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			try {
 				return (Promise<U>) fn.apply(result, exception);
 			} catch (Exception ex) {
-				propagateRuntimeException(ex);
+				if (ex instanceof RuntimeException) {
+					getCurrentEventloop().recordFatalError(ex, this);
+				}
 				return Promise.ofException(ex);
 			}
 		}
@@ -377,7 +398,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					try {
 						promise = fn.apply(result, null);
 					} catch (Exception ex) {
-						propagateRuntimeException(ex);
+						if (ex instanceof RuntimeException) {
+							getCurrentEventloop().recordFatalError(ex, this);
+						}
 						completeExceptionally(ex);
 						return;
 					}
@@ -387,7 +410,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					try {
 						promise = fn.apply(null, e);
 					} catch (Exception ex) {
-						propagateRuntimeException(ex);
+						if (ex instanceof RuntimeException) {
+							getCurrentEventloop().recordFatalError(ex, this);
+						}
 						completeExceptionally(ex);
 						return;
 					}
@@ -410,7 +435,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			try {
 				action.accept(result, exception);
 			} catch (Exception ex) {
-				propagateRuntimeException(ex);
+				if (ex instanceof RuntimeException) {
+					getCurrentEventloop().recordFatalError(ex, this);
+				}
 				return Promise.ofException(ex);
 			}
 			return this;
@@ -421,7 +448,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				try {
 					action.accept(result, e);
 				} catch (Exception ex) {
-					propagateRuntimeException(ex);
+					if (ex instanceof RuntimeException) {
+						getCurrentEventloop().recordFatalError(ex, this);
+					}
 					completeExceptionally(ex);
 					return;
 				}
@@ -443,7 +472,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			try {
 				action.run();
 			} catch (Exception ex) {
-				propagateRuntimeException(ex);
+				if (ex instanceof RuntimeException) {
+					getCurrentEventloop().recordFatalError(ex, this);
+				}
 				return Promise.ofException(ex);
 			}
 			return this;
@@ -454,7 +485,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				try {
 					action.run();
 				} catch (Exception ex) {
-					propagateRuntimeException(ex);
+					if (ex instanceof RuntimeException) {
+						getCurrentEventloop().recordFatalError(ex, this);
+					}
 					completeExceptionally(ex);
 					return;
 				}
@@ -478,7 +511,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				try {
 					action.accept(result);
 				} catch (Exception ex) {
-					propagateRuntimeException(ex);
+					if (ex instanceof RuntimeException) {
+						getCurrentEventloop().recordFatalError(ex, this);
+					}
 					return Promise.ofException(ex);
 				}
 			}
@@ -491,7 +526,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					try {
 						action.accept(result);
 					} catch (Exception ex) {
-						propagateRuntimeException(ex);
+						if (ex instanceof RuntimeException) {
+							getCurrentEventloop().recordFatalError(ex, this);
+						}
 						completeExceptionally(ex);
 						return;
 					}
@@ -517,7 +554,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				try {
 					action.run();
 				} catch (Exception ex) {
-					propagateRuntimeException(ex);
+					if (ex instanceof RuntimeException) {
+						getCurrentEventloop().recordFatalError(ex, this);
+					}
 					return Promise.ofException(ex);
 				}
 			}
@@ -530,7 +569,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					try {
 						action.run();
 					} catch (Exception ex) {
-						propagateRuntimeException(ex);
+						if (ex instanceof RuntimeException) {
+							getCurrentEventloop().recordFatalError(ex, this);
+						}
 						completeExceptionally(ex);
 						return;
 					}
@@ -556,7 +597,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				try {
 					action.accept(exception);
 				} catch (Exception ex) {
-					propagateRuntimeException(ex);
+					if (ex instanceof RuntimeException) {
+						getCurrentEventloop().recordFatalError(ex, this);
+					}
 					return Promise.ofException(ex);
 				}
 			}
@@ -571,7 +614,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					try {
 						action.accept(e);
 					} catch (Exception ex) {
-						propagateRuntimeException(ex);
+						if (ex instanceof RuntimeException) {
+							getCurrentEventloop().recordFatalError(ex, this);
+						}
 						completeExceptionally(ex);
 						return;
 					}
@@ -595,7 +640,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				try {
 					action.run();
 				} catch (Exception ex) {
-					propagateRuntimeException(ex);
+					if (ex instanceof RuntimeException) {
+						getCurrentEventloop().recordFatalError(ex, this);
+					}
 					return Promise.ofException(ex);
 				}
 			}
@@ -610,7 +657,9 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					try {
 						action.run();
 					} catch (Exception ex) {
-						propagateRuntimeException(ex);
+						if (ex instanceof RuntimeException) {
+							getCurrentEventloop().recordFatalError(ex, this);
+						}
 						completeExceptionally(ex);
 						return;
 					}

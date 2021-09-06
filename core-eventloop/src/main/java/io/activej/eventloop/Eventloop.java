@@ -20,6 +20,8 @@ import io.activej.async.callback.AsyncComputation;
 import io.activej.async.callback.Callback;
 import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.common.Checks;
+import io.activej.eventloop.error.FatalErrorHandler;
+import io.activej.eventloop.error.FatalErrorHandlers;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.RunnableEx;
 import io.activej.common.function.SupplierEx;
@@ -28,8 +30,6 @@ import io.activej.common.inspector.BaseInspector;
 import io.activej.common.reflection.ReflectionUtils;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.time.Stopwatch;
-import io.activej.eventloop.error.FatalErrorHandler;
-import io.activej.eventloop.error.FatalErrorHandlers;
 import io.activej.eventloop.executor.EventloopExecutor;
 import io.activej.eventloop.inspector.EventloopInspector;
 import io.activej.eventloop.inspector.EventloopStats;
@@ -95,9 +95,6 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	static {
 		JIGSAW_DETECTED = ReflectionUtils.isClassPresent("java.lang.Module");
 	}
-
-	@NotNull
-	private static volatile FatalErrorHandler globalFatalErrorHandler = FatalErrorHandlers.ignoreAllErrors();
 
 	/**
 	 * Collection of local tasks which were added from this thread.
@@ -264,6 +261,11 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		Eventloop eventloop = CURRENT_EVENTLOOP.get();
 		if (eventloop != null) return eventloop;
 		throw new IllegalStateException(NO_CURRENT_EVENTLOOP_ERROR);
+	}
+
+	@Nullable
+	public static Eventloop getCurrentEventloopOrNull() {
+		return CURRENT_EVENTLOOP.get();
 	}
 
 	public static void initWithEventloop(@NotNull Eventloop anotherEventloop, @NotNull Runnable runnable) {
@@ -1130,10 +1132,6 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		return future;
 	}
 
-	public static void setGlobalFatalErrorHandler(@NotNull FatalErrorHandler handler) {
-		globalFatalErrorHandler = handler;
-	}
-
 	// JMX
 	@JmxOperation(description = "enable monitoring " +
 			"[ when monitoring is enabled more stats are collected, but it causes more overhead " +
@@ -1175,7 +1173,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		if (fatalErrorHandler != null) {
 			handleFatalError(fatalErrorHandler, e, context);
 		} else {
-			handleFatalError(globalFatalErrorHandler, e, context);
+			handleFatalError(FatalErrorHandlers.getGlobalFatalErrorHandler(), e, context);
 		}
 		if (inspector != null) {
 			if (inEventloopThread()) {

@@ -25,7 +25,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 
-import static io.activej.common.exception.Utils.propagateRuntimeException;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 
@@ -79,7 +78,9 @@ public abstract class CompletePromise<T> implements Promise<T> {
 		try {
 			return Promise.of(fn.apply(getResult()));
 		} catch (Exception ex) {
-			propagateRuntimeException(ex);
+			if (ex instanceof RuntimeException) {
+				getCurrentEventloop().recordFatalError(ex, this);
+			}
 			return Promise.ofException(ex);
 		}
 	}
@@ -90,7 +91,9 @@ public abstract class CompletePromise<T> implements Promise<T> {
 		try {
 			return Promise.of(fn.apply(getResult(), null));
 		} catch (Exception ex) {
-			propagateRuntimeException(ex);
+			if (ex instanceof RuntimeException) {
+				getCurrentEventloop().recordFatalError(ex, this);
+			}
 			return Promise.ofException(ex);
 		}
 	}
@@ -100,7 +103,9 @@ public abstract class CompletePromise<T> implements Promise<T> {
 		try {
 			return Promise.of(fn.apply(getResult()));
 		} catch (Exception ex) {
-			propagateRuntimeException(ex);
+			if (ex instanceof RuntimeException) {
+				getCurrentEventloop().recordFatalError(ex, this);
+			}
 			return Promise.ofException(ex);
 		}
 	}
@@ -112,7 +117,9 @@ public abstract class CompletePromise<T> implements Promise<T> {
 		try {
 			return (Promise<U>) fn.apply(getResult());
 		} catch (Exception ex) {
-			propagateRuntimeException(ex);
+			if (ex instanceof RuntimeException) {
+				getCurrentEventloop().recordFatalError(ex, this);
+			}
 			return Promise.ofException(ex);
 		}
 	}
@@ -122,7 +129,9 @@ public abstract class CompletePromise<T> implements Promise<T> {
 		try {
 			return (Promise<U>) fn.get();
 		} catch (Exception ex) {
-			propagateRuntimeException(ex);
+			if (ex instanceof RuntimeException) {
+				getCurrentEventloop().recordFatalError(ex, this);
+			}
 			return Promise.ofException(ex);
 		}
 	}
@@ -134,7 +143,9 @@ public abstract class CompletePromise<T> implements Promise<T> {
 		try {
 			return (Promise<U>) fn.apply(getResult(), null);
 		} catch (Exception ex) {
-			propagateRuntimeException(ex);
+			if (ex instanceof RuntimeException) {
+				getCurrentEventloop().recordFatalError(ex, this);
+			}
 			return Promise.ofException(ex);
 		}
 	}
@@ -145,7 +156,9 @@ public abstract class CompletePromise<T> implements Promise<T> {
 			action.accept(getResult(), null);
 			return this;
 		} catch (Exception ex) {
-			propagateRuntimeException(ex);
+			if (ex instanceof RuntimeException) {
+				getCurrentEventloop().recordFatalError(ex, this);
+			}
 			return Promise.ofException(ex);
 		}
 	}
@@ -156,7 +169,9 @@ public abstract class CompletePromise<T> implements Promise<T> {
 			action.run();
 			return this;
 		} catch (Exception ex) {
-			propagateRuntimeException(ex);
+			if (ex instanceof RuntimeException) {
+				getCurrentEventloop().recordFatalError(ex, this);
+			}
 			return Promise.ofException(ex);
 		}
 	}
@@ -167,7 +182,9 @@ public abstract class CompletePromise<T> implements Promise<T> {
 			action.accept(getResult());
 			return this;
 		} catch (Exception ex) {
-			propagateRuntimeException(ex);
+			if (ex instanceof RuntimeException) {
+				getCurrentEventloop().recordFatalError(ex, this);
+			}
 			return Promise.ofException(ex);
 		}
 	}
@@ -178,7 +195,9 @@ public abstract class CompletePromise<T> implements Promise<T> {
 			action.run();
 			return this;
 		} catch (Exception ex) {
-			propagateRuntimeException(ex);
+			if (ex instanceof RuntimeException) {
+				getCurrentEventloop().recordFatalError(ex, this);
+			}
 			return Promise.ofException(ex);
 		}
 	}
