@@ -2115,10 +2115,19 @@ public class BinarySerializerTest {
 		BinarySerializer<@SerializeNullable Boolean> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
 				.build(new TypeT<@SerializeNullable Boolean>() {});
 
-		byte[] array = new byte[10];
-		serializer.encode(array, 0, null);
+		doTestNullableBoolean(serializer, null, SerializerDefBoolean.NULLABLE_NULL);
+		doTestNullableBoolean(serializer, false, SerializerDefBoolean.NULLABLE_FALSE);
+		doTestNullableBoolean(serializer, true, SerializerDefBoolean.NULLABLE_TRUE);
+	}
+
+	private void doTestNullableBoolean(BinarySerializer<Boolean> serializer, Boolean value, byte expectedByte) {
+		byte[] array = new byte[1];
+		serializer.encode(array, 0, value);
 		System.out.println(Arrays.toString(array));
-//		serializer.encode(array, 0, null);
+		Boolean decoded = serializer.decode(array, 0);
+		System.out.println(decoded);
+		assertEquals(value, decoded);
+		assertEquals(expectedByte, array[0]);
 	}
 
 	public interface LinkedListHolder {

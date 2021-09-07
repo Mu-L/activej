@@ -52,29 +52,35 @@ public final class SerializerDefBoolean extends SerializerDefPrimitive implement
 	}
 
 	@Override
+	protected boolean castToPrimitive() {
+		return !nullable;
+	}
+
+	@Override
 	protected Expression doSerialize(Expression byteArray, Variable off, Expression value, CompatibilityLevel compatibilityLevel) {
 		return !nullable ?
 				writeBoolean(byteArray, off, value) :
-				writeByte(byteArray, off, ifThenElse(isNull(value),
-						value(NULLABLE_NULL),
-						ifThenElse(value,
-								value(NULLABLE_TRUE),
-								value(NULLABLE_FALSE))));
+				ifThenElse(isNull(value),
+						writeByte(byteArray, off, value(NULLABLE_NULL)),
+						ifThenElse(cast(value, boolean.class),
+								writeByte(byteArray, off, value(NULLABLE_TRUE)),
+								writeByte(byteArray, off, value(NULLABLE_FALSE))
+						));
 	}
 
 	@Override
 	protected Expression doDeserialize(Expression in, CompatibilityLevel compatibilityLevel) {
-		return !nullable ?
-				readBoolean(in) :
-				let(readByte(in), aByte -> ifThenElse(cmpEq(aByte, value(NULLABLE_NULL)),
-						nullRef(Boolean.class),
-						ifThenElse(cmpEq(aByte, value(NULLABLE_FALSE)),
-								value(false),
-								ifThenElse(cmpEq(aByte, value(NULLABLE_TRUE)),
-										value(true),
-										throwException(CorruptedDataException.class,
-												concat(value("Unsupported nullable boolean value "), aByte,
-														value(", allowed: " + NULLABLE_NULL + ", " + NULLABLE_FALSE + ", " + NULLABLE_TRUE)))))));
+		return let(readByte(in), aByte ->
+				!nullable ?
+						aByte :
+						ifThenElse(cmpEq(aByte, value(NULLABLE_NULL)),
+								nullRef(Boolean.class), ifThenElse(cmpEq(aByte, value(NULLABLE_FALSE)),
+										value(false, Boolean.class),
+										ifThenElse(cmpEq(aByte, value(NULLABLE_TRUE)),
+												value(true, Boolean.class),
+												throwException(CorruptedDataException.class,
+														concat(value("Unsupported nullable boolean value "), aByte,
+																value(", allowed: " + NULLABLE_NULL + ", " + NULLABLE_FALSE + ", " + NULLABLE_TRUE)))))));
 	}
 
 	@Override
