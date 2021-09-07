@@ -3,6 +3,7 @@ package io.activej.serializer;
 import io.activej.serializer.annotations.*;
 import io.activej.serializer.impl.*;
 import io.activej.test.rules.ClassBuilderConstantsRule;
+import io.activej.types.TypeT;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Rule;
 import org.junit.Test;
@@ -2107,6 +2108,17 @@ public class BinarySerializerTest {
 
 		assertEquals(linked, deserialized.linked);
 		assertSame(LinkedHashMap.class, deserialized.linked.getClass());
+	}
+
+	@Test
+	public void nullableBooleanTest() {
+		BinarySerializer<@SerializeNullable Boolean> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
+				.build(new TypeT<@SerializeNullable Boolean>() {});
+
+		byte[] array = new byte[10];
+		serializer.encode(array, 0, null);
+		System.out.println(Arrays.toString(array));
+//		serializer.encode(array, 0, null);
 	}
 
 	public interface LinkedListHolder {

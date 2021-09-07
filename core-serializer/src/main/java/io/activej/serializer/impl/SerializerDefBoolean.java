@@ -19,12 +19,20 @@ package io.activej.serializer.impl;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.serializer.CompatibilityLevel;
+import io.activej.serializer.CorruptedDataException;
 import io.activej.serializer.SerializerDef;
 
-import static io.activej.serializer.impl.SerializerExpressions.readBoolean;
-import static io.activej.serializer.impl.SerializerExpressions.writeBoolean;
+import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.serializer.CompatibilityLevel.LEVEL_4;
+import static io.activej.serializer.impl.SerializerExpressions.*;
 
-public final class SerializerDefBoolean extends SerializerDefPrimitive {
+public final class SerializerDefBoolean extends SerializerDefPrimitive implements SerializerDefWithNullable {
+	public static final byte NULLABLE_NULL = 0b00;
+	public static final byte NULLABLE_FALSE = 0b10;
+	public static final byte NULLABLE_TRUE = 0b11;
+
+	private boolean nullable;
+
 	public SerializerDefBoolean() {
 		this(true);
 	}
@@ -33,18 +41,47 @@ public final class SerializerDefBoolean extends SerializerDefPrimitive {
 		super(boolean.class, wrapped);
 	}
 
+	public SerializerDefBoolean(boolean wrapped, boolean nullable) {
+		super(boolean.class, wrapped);
+		this.nullable = nullable;
+	}
+
 	@Override
 	public SerializerDef ensureWrapped() {
-		return new SerializerDefBoolean(true);
+		return new SerializerDefBoolean(true, nullable);
 	}
 
 	@Override
 	protected Expression doSerialize(Expression byteArray, Variable off, Expression value, CompatibilityLevel compatibilityLevel) {
-		return writeBoolean(byteArray, off, value);
+		return !nullable ?
+				writeBoolean(byteArray, off, value) :
+				writeByte(byteArray, off, ifThenElse(isNull(value),
+						value(NULLABLE_NULL),
+						ifThenElse(value,
+								value(NULLABLE_TRUE),
+								value(NULLABLE_FALSE))));
 	}
 
 	@Override
 	protected Expression doDeserialize(Expression in, CompatibilityLevel compatibilityLevel) {
-		return readBoolean(in);
+		return !nullable ?
+				readBoolean(in) :
+				let(readByte(in), aByte -> ifThenElse(cmpEq(aByte, value(NULLABLE_NULL)),
+						nullRef(Boolean.class),
+						ifThenElse(cmpEq(aByte, value(NULLABLE_FALSE)),
+								value(false),
+								ifThenElse(cmpEq(aByte, value(NULLABLE_TRUE)),
+										value(true),
+										throwException(CorruptedDataException.class,
+												concat(value("Unsupported nullable boolean value "), aByte,
+														value(", allowed: " + NULLABLE_NULL + ", " + NULLABLE_FALSE + ", " + NULLABLE_TRUE)))))));
+	}
+
+	@Override
+	public SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
+		if (compatibilityLevel.getLevel() < LEVEL_4.getLevel()) {
+			return new SerializerDefNullable(this);
+		}
+		return new SerializerDefBoolean(wrapped, true);
 	}
 }

@@ -2,8 +2,10 @@ package io.activej.serializer;
 
 import io.activej.codegen.DefiningClassLoader;
 
+import java.nio.file.Paths;
+
 public final class Utils {
-	public static final DefiningClassLoader DEFINING_CLASS_LOADER = DefiningClassLoader.create();
+	public static final DefiningClassLoader DEFINING_CLASS_LOADER = DefiningClassLoader.create().withDebugOutputDir(Paths.get("/tmp/test"));
 
 	static final boolean AT_LEAST_JAVA_9;
 	static final boolean AT_LEAST_JAVA_12;
