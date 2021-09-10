@@ -110,13 +110,9 @@ public abstract class WebSocketServlet implements AsyncServlet {
 				.whenResult(rawStream::closeEx);
 
 		decoder.getProcessCompletion()
-				.whenComplete(($, e) -> {
-					if (e == null) {
-						encoder.sendCloseFrame(REGULAR_CLOSE);
-					} else {
-						encoder.closeEx(e);
-					}
-				});
+				.whenComplete(
+						$ -> encoder.sendCloseFrame(REGULAR_CLOSE),
+						encoder::closeEx);
 	}
 
 	private static boolean isUpgradeHeaderMissing(HttpMessage message) {

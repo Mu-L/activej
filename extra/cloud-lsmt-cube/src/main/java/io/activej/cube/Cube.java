@@ -767,16 +767,12 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 			Aggregation aggregation = entry.getValue().aggregation;
 
 			runnables.add(() -> strategy.apply(aggregation)
-					.whenComplete((aggregationDiff, e) -> {
-						if (e == null) {
-							if (!aggregationDiff.isEmpty()) {
-								map.put(aggregationId, aggregationDiff);
-							}
-						} else {
-							throw new CubeException(
-									"Failed to consolidate aggregation '" + aggregationId + '\'', e);
+					.whenResult(aggregationDiff -> {
+						if (!aggregationDiff.isEmpty()) {
+							map.put(aggregationId, aggregationDiff);
 						}
 					})
+					.mapException(e -> new CubeException("Failed to consolidate aggregation '" + aggregationId + '\'', e))
 					.toVoid());
 		}
 
@@ -824,16 +820,14 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 				cubeQuery.getWhere().getDimensions()));
 		long queryStarted = eventloop.currentTimeMillis();
 		return new RequestContext<>().execute(queryClassLoader, cubeQuery)
-				.whenComplete((queryResult, e) -> {
-					if (e == null) {
-						queryTimes.recordValue((int) (eventloop.currentTimeMillis() - queryStarted));
-					} else {
-						queryErrors++;
-						queryLastError = e;
+				.whenComplete(queryResult -> {
+					queryTimes.recordValue((int) (eventloop.currentTimeMillis() - queryStarted));
+				}, e -> {
+					queryErrors++;
+					queryLastError = e;
 
-						if (e instanceof FileNotFoundException) {
-							logger.warn("Query failed because of FileNotFoundException. " + cubeQuery, e);
-						}
+					if (e instanceof FileNotFoundException) {
+						logger.warn("Query failed because of FileNotFoundException. " + cubeQuery, e);
 					}
 				});
 	}
